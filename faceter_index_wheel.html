@@ -586,8 +586,8 @@
         td.innerHTML = `
           <div class="cell-index ${cls}">
             <div class="idx-value">${rounded}${isHalf ? '<span class="half-badge">½</span>' : ''}</div>
-            <div class="idx-exact">${exact}</div>
-            <div class="idx-error" style="color:${errColor}">±${error}°</div>
+            <div class="idx-error" style="color:${errColor}">${(rounded * (360 / teeth)).toFixed(2)}°</div>
+            <div class="idx-exact" style="color:${errColor}">${parseFloat(error).toFixed(4)}°</div>
           </div>`;
         tr.appendChild(td);
       });
