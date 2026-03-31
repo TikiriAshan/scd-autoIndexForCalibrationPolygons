@@ -595,33 +595,40 @@
       tbody.appendChild(tr);
     });
 
-    // Determine which wheel columns have any red entry (error >= 0.30)
+    // Determine column states
     const redWheels = new Set();
-    tbody.querySelectorAll('td[data-wheel]').forEach(td => {
-      if (parseFloat(td.dataset.err) >= 0.30) redWheels.add(td.dataset.wheel);
+    const greenWheels = new Set();
+    WHEELS.forEach(teeth => {
+      const cells = tbody.querySelectorAll(`td[data-wheel="${teeth}"]`);
+      const allGreen = [...cells].every(td => parseFloat(td.dataset.err) < 0.10);
+      const anyRed   = [...cells].some(td  => parseFloat(td.dataset.err) >= 0.30);
+      if (anyRed)   redWheels.add(String(teeth));
+      if (allGreen) greenWheels.add(String(teeth));
     });
 
     // Apply column box styling
     const headerCells = document.querySelectorAll('#resultsTable thead th');
-    // header cells: 0=angle, 1=180, 2=160, 3=144, 4=128
     WHEELS.forEach((teeth, i) => {
-      const isRed = redWheels.has(String(teeth));
-      const thIdx = i + 1;
-      headerCells[thIdx].style.outline = isRed ? '2px solid #f87171' : '';
-      headerCells[thIdx].style.outlineOffset = isRed ? '-2px' : '';
-      headerCells[thIdx].style.background = isRed ? 'rgba(248,113,113,0.10)' : '';
+      const isRed   = redWheels.has(String(teeth));
+      const isGreen = !isRed && greenWheels.has(String(teeth));
+      const color   = isRed ? '#f87171' : isGreen ? '#4ade80' : null;
+      const bgHead  = isRed ? 'rgba(248,113,113,0.10)' : isGreen ? 'rgba(74,222,128,0.08)' : '';
+      const bgCell  = isRed ? 'rgba(248,113,113,0.06)' : isGreen ? 'rgba(74,222,128,0.05)' : '';
+      const thIdx   = i + 1;
+
+      headerCells[thIdx].style.background  = bgHead;
+      headerCells[thIdx].style.borderTop   = color ? `2px solid ${color}` : '';
+      headerCells[thIdx].style.borderLeft  = color ? `2px solid ${color}` : '';
+      headerCells[thIdx].style.borderRight = color ? `2px solid ${color}` : '';
+
       tbody.querySelectorAll(`td[data-wheel="${teeth}"]`).forEach((td, rowIdx) => {
         const isLast = rowIdx === angles.length - 1;
-        td.style.background = isRed ? 'rgba(248,113,113,0.06)' : '';
-        td.style.borderLeft  = isRed ? '2px solid #f87171' : '';
-        td.style.borderRight = isRed ? '2px solid #f87171' : '';
-        td.style.borderBottom = isRed && !isLast ? '1px solid rgba(248,113,113,0.2)' : '';
-        if (isLast) td.style.borderBottom = isRed ? '2px solid #f87171' : '';
+        td.style.background   = bgCell;
+        td.style.borderLeft   = color ? `2px solid ${color}` : '';
+        td.style.borderRight  = color ? `2px solid ${color}` : '';
+        td.style.borderBottom = color && !isLast ? `1px solid ${color}33` : '';
+        if (isLast) td.style.borderBottom = color ? `2px solid ${color}` : '';
       });
-      // Top border via header
-      headerCells[thIdx].style.borderTop = isRed ? '2px solid #f87171' : '';
-      headerCells[thIdx].style.borderLeft = isRed ? '2px solid #f87171' : '';
-      headerCells[thIdx].style.borderRight = isRed ? '2px solid #f87171' : '';
     });
 
     // Formula strip
