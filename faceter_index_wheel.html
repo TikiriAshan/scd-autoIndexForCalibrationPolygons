@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faceter Index Wheel Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Oswald:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --panel: #13161e;
+    --border: #1e2430;
+    --accent: #c9a84c;
+    --accent2: #7ecfc0;
+    --accent3: #e05a5a;
+    --text: #d6dce8;
+    --muted: #4a5568;
+    --mono: 'Share Tech Mono', monospace;
+    --head: 'Oswald', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 1;
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(13,15,20,0.92);
+    backdrop-filter: blur(8px);
+  }
+
+  .logo-icon {
+    width: 38px; height: 38px;
+    flex-shrink: 0;
+  }
+
+  header h1 {
+    font-family: var(--head);
+    font-weight: 600;
+    font-size: 1.35rem;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  header p {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-top: 2px;
+  }
+
+  .main {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 0;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    width: 240px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    background: var(--panel);
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .panel-label {
+    font-family: var(--head);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .input-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .input-num {
+    font-size: 0.65rem;
+    color: var(--muted);
+    width: 18px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .angle-input {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 6px 10px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .angle-input:focus {
+    border-color: var(--accent);
+    background: rgba(201,168,76,0.07);
+  }
+
+  .angle-input::placeholder {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  /* Unit indicator */
+  .input-unit {
+    font-size: 0.68rem;
+    color: var(--muted);
+    flex-shrink: 0;
+    width: 18px;
+  }
+
+  .calc-btn {
+    margin-top: 4px;
+    background: var(--accent);
+    color: #0d0f14;
+    border: none;
+    border-radius: 3px;
+    font-family: var(--head);
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 10px 0;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    width: 100%;
+  }
+
+  .calc-btn:hover { opacity: 0.88; }
+  .calc-btn:active { transform: scale(0.97); }
+
+  .clear-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    padding: 7px 0;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    width: 100%;
+  }
+
+  .clear-btn:hover {
+    border-color: var(--accent3);
+    color: var(--accent3);
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 4px 0;
+  }
+
+  /* Wheel info legend */
+  .wheel-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .wheel-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .wheel-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    flex: 1;
+    padding: 28px 32px;
+    overflow-x: auto;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+
+  .results-title {
+    font-family: var(--head);
+    font-size: 1.05rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .results-subtitle {
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  /* Table */
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    animation: fadeIn 0.35s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+
+  thead tr {
+    background: rgba(201,168,76,0.08);
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    font-family: var(--head);
+    font-weight: 400;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 11px 16px;
+    text-align: center;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  th.col-angle {
+    text-align: left;
+    color: var(--text);
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(30,36,48,0.8);
+    transition: background 0.15s;
+  }
+
+  tbody tr:last-child { border-bottom: none; }
+
+  tbody tr:hover {
+    background: rgba(201,168,76,0.04);
+  }
+
+  td {
+    padding: 10px 16px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  td.col-angle {
+    text-align: left;
+    font-size: 0.88rem;
+    color: var(--accent);
+    letter-spacing: 0.04em;
+  }
+
+  .cell-index {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .idx-value {
+    font-size: 1.0rem;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+  }
+
+  .idx-exact {
+    font-size: 0.62rem;
+    color: var(--muted);
+  }
+
+  .idx-error {
+    font-size: 0.65rem;
+    letter-spacing: 0.04em;
+    margin-top: 1px;
+  }
+
+  .half-badge {
+    display: inline-block;
+    font-size: 0.58rem;
+    background: rgba(126,207,192,0.18);
+    color: var(--accent2);
+    border: 1px solid rgba(126,207,192,0.3);
+    border-radius: 2px;
+    padding: 0 4px;
+    margin-left: 3px;
+    letter-spacing: 0.06em;
+    vertical-align: middle;
+  }
+
+  /* Color coding per wheel */
+  .w180 .idx-value { color: #e0a85a; }
+  .w160 .idx-value { color: var(--accent2); }
+  .w144 .idx-value { color: #a78bfa; }
+  .w128 .idx-value { color: #f87171; }
+
+  /* Empty / placeholder state */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 14px;
+    color: var(--muted);
+    padding: 60px 0;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .empty-state svg {
+    opacity: 0.18;
+  }
+
+  .empty-state p {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-align: center;
+    line-height: 1.7;
+  }
+
+  /* Formula reference strip */
+  .formula-strip {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 18px;
+    background: rgba(13,15,20,0.6);
+  }
+
+  .formula-item {
+    font-size: 0.7rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .formula-item span {
+    color: var(--text);
+  }
+
+  /* Responsive */
+  @media (max-width: 680px) {
+    .main { flex-direction: column; }
+    .left-panel { width: 100%; border-right: none; border-bottom: 1px solid var(--border); }
+    .right-panel { padding: 18px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <!-- Gear/wheel SVG logo -->
+  <svg class="logo-icon" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="19" cy="19" r="17" stroke="#c9a84c" stroke-width="1.2" stroke-dasharray="4 3"/>
+    <circle cx="19" cy="19" r="10" stroke="#c9a84c" stroke-width="1.5"/>
+    <circle cx="19" cy="19" r="3" fill="#c9a84c"/>
+    <!-- tick marks -->
+    <line x1="19" y1="2"  x2="19" y2="6"  stroke="#c9a84c" stroke-width="1.5"/>
+    <line x1="19" y1="32" x2="19" y2="36" stroke="#c9a84c" stroke-width="1.5"/>
+    <line x1="2"  y1="19" x2="6"  y2="19" stroke="#c9a84c" stroke-width="1.5"/>
+    <line x1="32" y1="19" x2="36" y2="19" stroke="#c9a84c" stroke-width="1.5"/>
+    <line x1="6.4"  y1="6.4"  x2="9.2"  y2="9.2"  stroke="#c9a84c" stroke-width="1.2"/>
+    <line x1="28.8" y1="28.8" x2="31.6" y2="31.6" stroke="#c9a84c" stroke-width="1.2"/>
+    <line x1="31.6" y1="6.4"  x2="28.8" y2="9.2"  stroke="#c9a84c" stroke-width="1.2"/>
+    <line x1="6.4"  y1="31.6" x2="9.2"  y2="28.8" stroke="#c9a84c" stroke-width="1.2"/>
+  </svg>
+  <div>
+    <h1>Faceter Index Wheel Calculator</h1>
+    <p>Index position finder for 180 · 160 · 144 · 128 wheels</p>
+  </div>
+</header>
+
+<div class="main">
+  <!-- LEFT: Inputs -->
+  <div class="left-panel">
+    <div>
+      <div class="panel-label">Angles (°)</div>
+      <div class="input-list" id="inputList"></div>
+    </div>
+    <button class="calc-btn" onclick="calculate()">Calculate</button>
+    <button class="clear-btn" onclick="clearAll()">Clear All</button>
+    <hr class="divider">
+    <div>
+      <div class="panel-label" style="margin-bottom:10px;">Wheels</div>
+      <div class="wheel-legend">
+        <div class="wheel-item"><div class="wheel-dot" style="background:#e0a85a"></div>180-tooth &nbsp;<span style="color:#3a3a3a;font-size:0.62rem;">(2.000°/idx)</span></div>
+        <div class="wheel-item"><div class="wheel-dot" style="background:#7ecfc0"></div>160-tooth &nbsp;<span style="color:#3a3a3a;font-size:0.62rem;">(2.250°/idx)</span></div>
+        <div class="wheel-item"><div class="wheel-dot" style="background:#a78bfa"></div>144-tooth &nbsp;<span style="color:#3a3a3a;font-size:0.62rem;">(2.500°/idx)</span></div>
+        <div class="wheel-item"><div class="wheel-dot" style="background:#f87171"></div>128-tooth &nbsp;<span style="color:#3a3a3a;font-size:0.62rem;">(2.8125°/idx)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Results -->
+  <div class="right-panel" id="rightPanel">
+    <div class="empty-state" id="emptyState">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="30" stroke="#c9a84c" stroke-width="1.5" stroke-dasharray="6 4"/>
+        <circle cx="32" cy="32" r="18" stroke="#c9a84c" stroke-width="1.5"/>
+        <circle cx="32" cy="32" r="5" fill="#c9a84c"/>
+        <line x1="32" y1="2"  x2="32" y2="10" stroke="#c9a84c" stroke-width="2"/>
+        <line x1="32" y1="54" x2="32" y2="62" stroke="#c9a84c" stroke-width="2"/>
+        <line x1="2"  y1="32" x2="10" y2="32" stroke="#c9a84c" stroke-width="2"/>
+        <line x1="54" y1="32" x2="62" y2="32" stroke="#c9a84c" stroke-width="2"/>
+      </svg>
+      <p>Enter facet angles on the left<br>and press <strong style="color:var(--accent)">Calculate</strong>.</p>
+    </div>
+    <div id="resultsArea" style="display:none; flex-direction:column; gap:18px;">
+      <div class="results-header">
+        <span class="results-title">Index Results</span>
+        <span class="results-subtitle" id="resultsMeta"></span>
+      </div>
+      <div class="table-wrap">
+        <table id="resultsTable">
+          <thead>
+            <tr>
+              <th class="col-angle">#&nbsp;&nbsp;Angle</th>
+              <th>◎ 180</th>
+              <th>◎ 160</th>
+              <th>◎ 144</th>
+              <th>◎ 128</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+      <div class="formula-strip" id="formulaStrip"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const WHEELS = [180, 160, 144, 128];
+  const WHEEL_COLORS = { 180: 'w180', 160: 'w160', 144: 'w144', 128: 'w128' };
+
+  // Build 10 input rows
+  const inputList = document.getElementById('inputList');
+  for (let i = 1; i <= 10; i++) {
+    const row = document.createElement('div');
+    row.className = 'input-row';
+    row.innerHTML = `
+      <span class="input-num">${i}</span>
+      <input class="angle-input" type="number" step="0.001" min="0" max="360"
+             placeholder="e.g. 17.89" id="ang${i}"
+             onkeydown="if(event.key==='Enter') calculate()">
+      <span class="input-unit">°</span>
+    `;
+    inputList.appendChild(row);
+  }
+
+  function roundToHalf(value) {
+    return Math.round(value * 2) / 2;
+  }
+
+  function calcIndex(angle, teeth) {
+    const degPerIndex = 360 / teeth;
+    const exact = angle / degPerIndex;
+    const rounded = roundToHalf(exact);
+    const actualAngle = rounded * degPerIndex;
+    const error = Math.abs(actualAngle - angle);
+    return { exact: exact.toFixed(4), rounded, error: error.toFixed(4) };
+  }
+
+  function calculate() {
+    const angles = [];
+    for (let i = 1; i <= 10; i++) {
+      const val = document.getElementById(`ang${i}`).value.trim();
+      if (val !== '' && !isNaN(parseFloat(val))) {
+        angles.push({ index: i, angle: parseFloat(val) });
+      }
+    }
+
+    const emptyState = document.getElementById('emptyState');
+    const resultsArea = document.getElementById('resultsArea');
+
+    if (angles.length === 0) {
+      emptyState.style.display = 'flex';
+      resultsArea.style.display = 'none';
+      return;
+    }
+
+    emptyState.style.display = 'none';
+    resultsArea.style.display = 'flex';
+
+    document.getElementById('resultsMeta').textContent =
+      `${angles.length} angle${angles.length > 1 ? 's' : ''} · rounded to nearest 0.5 index`;
+
+    // Reset any previous column highlight styles
+    document.querySelectorAll('#resultsTable thead th').forEach(th => {
+      th.style.cssText = '';
+    });
+
+    const tbody = document.getElementById('resultsBody');
+    tbody.innerHTML = '';
+
+    angles.forEach(({ index, angle }) => {
+      const tr = document.createElement('tr');
+
+      // Angle cell
+      const tdAngle = document.createElement('td');
+      tdAngle.className = 'col-angle';
+      tdAngle.innerHTML = `<span style="color:var(--muted);font-size:0.7rem;margin-right:6px;">${index}</span>${angle.toFixed(4)}°`;
+      tr.appendChild(tdAngle);
+
+      WHEELS.forEach(teeth => {
+        const { exact, rounded, error } = calcIndex(angle, teeth);
+        const isHalf = (rounded % 1 !== 0);
+        const errNum = parseFloat(error);
+        const errColor = errNum < 0.10 ? '#4ade80' : errNum < 0.20 ? '#facc15' : errNum < 0.30 ? '#fb923c' : '#f87171';
+        const td = document.createElement('td');
+        td.dataset.wheel = teeth;
+        td.dataset.err = errNum;
+        const cls = WHEEL_COLORS[teeth];
+        td.innerHTML = `
+          <div class="cell-index ${cls}">
+            <div class="idx-value">${rounded}${isHalf ? '<span class="half-badge">½</span>' : ''}</div>
+            <div class="idx-exact">${exact}</div>
+            <div class="idx-error" style="color:${errColor}">±${error}°</div>
+          </div>`;
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    // Determine which wheel columns have any red entry (error >= 0.30)
+    const redWheels = new Set();
+    tbody.querySelectorAll('td[data-wheel]').forEach(td => {
+      if (parseFloat(td.dataset.err) >= 0.30) redWheels.add(td.dataset.wheel);
+    });
+
+    // Apply column box styling
+    const headerCells = document.querySelectorAll('#resultsTable thead th');
+    // header cells: 0=angle, 1=180, 2=160, 3=144, 4=128
+    WHEELS.forEach((teeth, i) => {
+      const isRed = redWheels.has(String(teeth));
+      const thIdx = i + 1;
+      headerCells[thIdx].style.outline = isRed ? '2px solid #f87171' : '';
+      headerCells[thIdx].style.outlineOffset = isRed ? '-2px' : '';
+      headerCells[thIdx].style.background = isRed ? 'rgba(248,113,113,0.10)' : '';
+      tbody.querySelectorAll(`td[data-wheel="${teeth}"]`).forEach((td, rowIdx) => {
+        const isLast = rowIdx === angles.length - 1;
+        td.style.background = isRed ? 'rgba(248,113,113,0.06)' : '';
+        td.style.borderLeft  = isRed ? '2px solid #f87171' : '';
+        td.style.borderRight = isRed ? '2px solid #f87171' : '';
+        td.style.borderBottom = isRed && !isLast ? '1px solid rgba(248,113,113,0.2)' : '';
+        if (isLast) td.style.borderBottom = isRed ? '2px solid #f87171' : '';
+      });
+      // Top border via header
+      headerCells[thIdx].style.borderTop = isRed ? '2px solid #f87171' : '';
+      headerCells[thIdx].style.borderLeft = isRed ? '2px solid #f87171' : '';
+      headerCells[thIdx].style.borderRight = isRed ? '2px solid #f87171' : '';
+    });
+
+    // Formula strip
+    const strip = document.getElementById('formulaStrip');
+    strip.innerHTML = WHEELS.map(teeth => {
+      const dpi = (360 / teeth).toFixed(4);
+      return `<div class="formula-item">◎ <strong>${teeth}</strong>: <span>360/${teeth} = ${dpi}°/idx</span></div>`;
+    }).join('');
+  }
+
+  function clearAll() {
+    for (let i = 1; i <= 10; i++) {
+      document.getElementById(`ang${i}`).value = '';
+    }
+    document.getElementById('emptyState').style.display = 'flex';
+    document.getElementById('resultsArea').style.display = 'none';
+    document.getElementById(`ang1`).focus();
+  }
+</script>
+</body>
+</html>
